@@ -4,3 +4,10 @@ export type createHotelDTO = {
     location: string;
     rating?: number;
 }
+
+export type updateHotelDTO = {
+    name?: string;
+    address?: string;
+    location?: string;
+    rating?: number;
+};
