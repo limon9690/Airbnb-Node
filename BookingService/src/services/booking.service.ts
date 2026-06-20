@@ -1,20 +1,29 @@
+import { serverConfig } from "../config";
+import { redlock } from "../config/redis.config";
 import { CreateBookingDto } from "../dto/booking.dto";
 import { bookingRepository } from "../repositories/booking.repository";
-import { NotFoundError } from "../utils/errors/app.error";
+import { InternalServerError, NotFoundError } from "../utils/errors/app.error";
 import { generateIdempotencyKey } from "../utils/helpers/generateIdempotencyKey";
 import { prisma } from "../utils/lib/prisma";
 
 const createBooking = async (bookingData: CreateBookingDto) => {
-  const booking = await bookingRepository.createBooking(bookingData);
+  const bookingResource = `booking:${bookingData.hotelId}`;
 
-  const idempotencyKey = generateIdempotencyKey();
+  try {
+    await redlock.acquire([bookingResource], serverConfig.BOOKING_LOCK_TTL);
 
-  const idempotencyRecord = await bookingRepository.createIdempotencyKey(
-    idempotencyKey,
-    booking.id,
-  );
+    const booking = await bookingRepository.createBooking(bookingData);
+    const idempotencyKey = generateIdempotencyKey();
 
-  return { booking: booking, idempotencyKey: idempotencyRecord.idemKey };
+    const idempotencyRecord = await bookingRepository.createIdempotencyKey(
+      idempotencyKey,
+      booking.id,
+    );
+
+    return { booking: booking, idempotencyKey: idempotencyRecord.idemKey };
+  } catch (error: any) {
+    throw new InternalServerError(error.message);
+  }
 };
 
 const confirmBooking = async (idempotencyKey: string) => {
