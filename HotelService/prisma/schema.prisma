@@ -13,11 +13,50 @@ datasource db {
 }
 
 model Hotel {
-  id        Int      @id @default(autoincrement())
-  name      String   @unique
-  address   String
-  location  String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  rating    Int?
+  id                  Int      @id @default(autoincrement())
+  name                String   @unique
+  address             String
+  location            String
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  rating              Int?
+  roomCategories      RoomCategory[]
+  rooms               Room[]
+}
+
+model RoomCategory {
+  id          Int         @id @default(autoincrement())
+  price       Int
+  roomType    RoomType
+  roomCount   Int
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  hotel       Hotel   @relation(fields: [hotelId], references: [id])
+  hotelId     Int 
+
+  rooms       Room[]
+}
+
+model Room {
+  id                     Int          @id @default(autoincrement())
+  price                  Int
+  dateOfAvailability     DateTime
+  createdAt              DateTime     @default(now())
+  updatedAt              DateTime     @updatedAt
+  bookingId              Int?  
+
+  RoomCategory           RoomCategory   @relation(fields: [roomCategoryId], references: [id])
+  roomCategoryId         Int 
+
+  hotel                  Hotel   @relation(fields: [hotelId], references: [id])
+  hotelId                Int 
+}
+
+enum RoomType {
+  SINGLE
+  DOUBLE
+  FAMILY
+  DELUXE
+  SUITE
 }
