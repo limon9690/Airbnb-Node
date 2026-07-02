@@ -8,7 +8,6 @@ import {
 } from "./middlewares/error.middleware";
 import logger from "./config/logger.config";
 import { attachCorrelationIdMiddleware } from "./middlewares/correlation.middleware";
-import { addToEmailQueue } from "./queues/email.queue";
 import "./workers/email.worker";
 
 const app = express();
@@ -32,11 +31,4 @@ app.use(genericErrorHandler);
 app.listen(serverConfig.PORT, () => {
   logger.info(`Server is running on http://localhost:${serverConfig.PORT}`);
   logger.info(`Press Ctrl+C to stop the server.`);
-
-  addToEmailQueue("email-job", {
-    from: "test",
-    to: "test",
-    subject: "test",
-    templateID: "test",
-  });
 });

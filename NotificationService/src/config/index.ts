@@ -5,6 +5,7 @@ type ServerConfig = {
   PORT: number;
   REDIS_HOST: string;
   REDIS_PORT: number;
+  RESEND_API_KEY: string;
 };
 
 function loadEnv() {
@@ -18,4 +19,5 @@ export const serverConfig: ServerConfig = {
   PORT: Number(process.env.PORT) || 3001,
   REDIS_HOST: process.env.REDIS_HOST || "localhost",
   REDIS_PORT: Number(process.env.REDIS_PORT) || 6379,
+  RESEND_API_KEY: process.env.RESEND_API_KEY || "",
 };
