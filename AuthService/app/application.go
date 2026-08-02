@@ -1,6 +1,7 @@
 package app
 
 import (
+	config "authservice/config/env"
 	"fmt"
 	"net/http"
 	"time"
@@ -14,9 +15,11 @@ type Application struct {
 	Config Config
 }
 
-func NewConfig(addr string) Config {
+func NewConfig() Config {
+	port := config.GetString("PORT", ":8080")
+
 	return Config{
-		Addr: addr,
+		Addr: port,
 	}
 }
 

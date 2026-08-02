@@ -2,11 +2,13 @@ package main
 
 import (
 	"authservice/app"
+	env "authservice/config/env"
 )
 
 func main() {
-	config := app.NewConfig(":3001")
+	env.Load()
 
+	config := app.NewConfig()
 	app := app.NewApplication(config)
 
 	app.Run()
