@@ -1,10 +1,17 @@
-import express from 'express';
-import pingRouter from './ping.router';
+import express from "express";
+import { UserController } from "../../controllers/user.controller";
+import { validateRequestBody } from "../../validators";
+import { createUserSchema } from "../../validators/user.validator";
 
-const v1Router = express.Router();
+const router = express.Router();
 
+router.post(
+  "/",
+  validateRequestBody(createUserSchema),
+  UserController.createUser,
+);
+router.get("/", UserController.getAllUsers);
+router.get("/:id", UserController.getUserById);
+router.delete("/:id", UserController.deleteUserById);
 
-
-v1Router.use('/ping',  pingRouter);
-
-export default v1Router;
+export default router;

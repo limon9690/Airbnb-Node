@@ -10,6 +10,7 @@ type ServerConfig = {
   DATABASE_PASSWORD: string;
   DATABASE_NAME: string;
   connectionLimit: number;
+  SALT_ROUNDS: number;
 };
 
 function loadEnv() {
@@ -28,4 +29,5 @@ export const serverConfig: ServerConfig = {
   DATABASE_PASSWORD: process.env.DATABASE_PASSWORD || "root",
   DATABASE_NAME: process.env.DATABASE_NAME || "airbnb_dev_booking",
   connectionLimit: Number(process.env.connectionLimit) || 5,
+  SALT_ROUNDS: Number(process.env.SALT_ROUNDS) || 10,
 };
