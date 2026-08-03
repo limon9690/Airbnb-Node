@@ -1,16 +1,42 @@
 import { serverConfig } from "../config";
-import { CreateUserDTO } from "../dto/user.dto";
+import { signInDTO, signUpDTO } from "../dto/user.dto";
 import { UserRepository } from "../repositories/user.repository";
 import bcrypt from "bcrypt";
 import { NotFoundError } from "../utils/errors/app.error";
+import { generateJWTToken } from "../utils/helpers/jwt.helper";
 
-const createUser = async (payload: CreateUserDTO) => {
+const signUp = async (payload: signUpDTO) => {
   const hashedPassword = await bcrypt.hash(
     payload.password,
     serverConfig.SALT_ROUNDS,
   );
+
   payload.password = hashedPassword;
+
   return await UserRepository.createUser(payload);
+};
+
+const signIn = async (payload: signInDTO) => {
+  const user = await UserRepository.getUserByEmail(payload.email);
+
+  if (!user) {
+    throw new NotFoundError("User not found");
+  }
+
+  const isMatch = await bcrypt.compare(payload.password, user.password);
+
+  if (!isMatch) {
+    throw new NotFoundError("Invalid credentials");
+  }
+
+  const token = generateJWTToken({ id: user.id, email: user.email });
+  const data = {
+    id: user.id,
+    email: user.email,
+    token,
+  };
+
+  return data;
 };
 
 const getUserById = async (id: number) => {
@@ -36,8 +62,9 @@ const deleteUserById = async (id: number) => {
 };
 
 export const UserService = {
-  createUser,
+  signUp,
   getUserById,
   getAllUsers,
   deleteUserById,
+  signIn,
 };

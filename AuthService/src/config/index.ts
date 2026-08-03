@@ -11,6 +11,8 @@ type ServerConfig = {
   DATABASE_NAME: string;
   connectionLimit: number;
   SALT_ROUNDS: number;
+  JWT_SECRET: string | undefined;
+  JWT_EXPIRES_IN: string | undefined;
 };
 
 function loadEnv() {
@@ -30,4 +32,6 @@ export const serverConfig: ServerConfig = {
   DATABASE_NAME: process.env.DATABASE_NAME || "airbnb_dev_booking",
   connectionLimit: Number(process.env.connectionLimit) || 5,
   SALT_ROUNDS: Number(process.env.SALT_ROUNDS) || 10,
+  JWT_SECRET: process.env.JWT_SECRET,
+  JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN,
 };

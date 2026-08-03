@@ -17,7 +17,7 @@ app.use(express.json());
  */
 
 app.use(attachCorrelationIdMiddleware);
-app.use("/api/v1/users", router);
+app.use("/api/v1/auth", router);
 
 /**
  * Add the error handler middleware

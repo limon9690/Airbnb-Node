@@ -2,14 +2,29 @@ import { NextFunction, Request, Response } from "express";
 import { UserService } from "../services/user.service";
 import { StatusCodes } from "http-status-codes/build/cjs/status-codes";
 
-const createUser = async (req: Request, res: Response, next: NextFunction) => {
+const signUp = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const payload = req.body;
-    const user = await UserService.createUser(payload);
+    const user = await UserService.signUp(payload);
 
     res.status(StatusCodes.CREATED).json({
       message: "User created successfully",
       data: user,
+      success: true,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const signIn = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const payload = req.body;
+    const data = await UserService.signIn(payload);
+
+    res.status(StatusCodes.OK).json({
+      message: "User signed in successfully",
+      data,
       success: true,
     });
   } catch (error) {
@@ -64,8 +79,9 @@ const deleteUserById = async (
 };
 
 export const UserController = {
-  createUser,
+  signUp,
   getUserById,
   getAllUsers,
   deleteUserById,
+  signIn,
 };
