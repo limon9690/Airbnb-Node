@@ -3,16 +3,19 @@ import { UserController } from "../../controllers/user.controller";
 import { validateRequestBody } from "../../validators";
 import { signInSchema, signUpSchema } from "../../validators/user.validator";
 import { auth } from "../../middlewares/auth.middleware";
+import { authLimiter } from "../../middlewares/rateLimiter.middleware";
 
 const router = express.Router();
 
 router.post(
   "/signup",
+  authLimiter,
   validateRequestBody(signUpSchema),
   UserController.signUp,
 );
 router.post(
   "/signin",
+  authLimiter,
   validateRequestBody(signInSchema),
   UserController.signIn,
 );
