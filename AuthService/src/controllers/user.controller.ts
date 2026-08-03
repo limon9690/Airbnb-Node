@@ -1,15 +1,23 @@
 import { NextFunction, Request, Response } from "express";
 import { UserService } from "../services/user.service";
 import { StatusCodes } from "http-status-codes/build/cjs/status-codes";
+import { UserProfile } from "../types/user.type";
 
 const signUp = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const payload = req.body;
     const user = await UserService.signUp(payload);
+    const data: UserProfile = {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+    };
 
     res.status(StatusCodes.CREATED).json({
       message: "User created successfully",
-      data: user,
+      data,
       success: true,
     });
   } catch (error) {
@@ -32,10 +40,14 @@ const signIn = async (req: Request, res: Response, next: NextFunction) => {
   }
 };
 
-const getUserById = async (req: Request, res: Response, next: NextFunction) => {
+const getUserProfile = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
   try {
-    const { id } = req.params;
-    const user = await UserService.getUserById(Number(id));
+    const id = req?.user?.id;
+    const user = await UserService.getUserProfile(Number(id));
 
     res.status(StatusCodes.OK).json({
       message: "User retrieved successfully",
@@ -50,6 +62,7 @@ const getUserById = async (req: Request, res: Response, next: NextFunction) => {
 const getAllUsers = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const users = await UserService.getAllUsers();
+
     res.status(StatusCodes.OK).json({
       message: "Users retrieved successfully",
       data: users,
@@ -60,14 +73,11 @@ const getAllUsers = async (req: Request, res: Response, next: NextFunction) => {
   }
 };
 
-const deleteUserById = async (
-  req: Request,
-  res: Response,
-  next: NextFunction,
-) => {
+const deleteUser = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { id } = req.params;
-    await UserService.deleteUserById(Number(id));
+    const id = req?.user?.id;
+    await UserService.deleteUser(Number(id));
+
     res.status(StatusCodes.OK).json({
       message: "User deleted successfully",
       data: null,
@@ -80,8 +90,8 @@ const deleteUserById = async (
 
 export const UserController = {
   signUp,
-  getUserById,
+  getUserProfile,
   getAllUsers,
-  deleteUserById,
+  deleteUser,
   signIn,
 };

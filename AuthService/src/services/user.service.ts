@@ -2,10 +2,17 @@ import { serverConfig } from "../config";
 import { signInDTO, signUpDTO } from "../dto/user.dto";
 import { UserRepository } from "../repositories/user.repository";
 import bcrypt from "bcrypt";
-import { NotFoundError } from "../utils/errors/app.error";
+import { BadRequestError, NotFoundError } from "../utils/errors/app.error";
 import { generateJWTToken } from "../utils/helpers/jwt.helper";
+import { UserProfile } from "../types/user.type";
 
 const signUp = async (payload: signUpDTO) => {
+  const existingUser = await UserRepository.getUserByEmail(payload.email);
+
+  if (existingUser) {
+    throw new BadRequestError("User with this email already exists");
+  }
+
   const hashedPassword = await bcrypt.hash(
     payload.password,
     serverConfig.SALT_ROUNDS,
@@ -13,7 +20,17 @@ const signUp = async (payload: signUpDTO) => {
 
   payload.password = hashedPassword;
 
-  return await UserRepository.createUser(payload);
+  const user = await UserRepository.createUser(payload);
+
+  const data: UserProfile = {
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    createdAt: user.createdAt,
+    updatedAt: user.updatedAt,
+  };
+
+  return data;
 };
 
 const signIn = async (payload: signInDTO) => {
@@ -30,30 +47,40 @@ const signIn = async (payload: signInDTO) => {
   }
 
   const token = generateJWTToken({ id: user.id, email: user.email });
-  const data = {
+  const userData: UserProfile = {
     id: user.id,
     email: user.email,
-    token,
+    name: user.name,
+    createdAt: user.createdAt,
+    updatedAt: user.updatedAt,
   };
 
-  return data;
+  return { data: userData, token };
 };
 
-const getUserById = async (id: number) => {
+const getUserProfile = async (id: number) => {
   const user = await UserRepository.getUserById(id);
 
   if (!user) {
     throw new NotFoundError("User not found");
   }
 
-  return user;
+  const data: UserProfile = {
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    createdAt: user.createdAt,
+    updatedAt: user.updatedAt,
+  };
+
+  return data;
 };
 
 const getAllUsers = async () => {
   return await UserRepository.getAllUsers();
 };
 
-const deleteUserById = async (id: number) => {
+const deleteUser = async (id: number) => {
   const user = await UserRepository.getUserById(id);
   if (!user) {
     throw new NotFoundError("User not found");
@@ -63,8 +90,8 @@ const deleteUserById = async (id: number) => {
 
 export const UserService = {
   signUp,
-  getUserById,
+  getUserProfile,
   getAllUsers,
-  deleteUserById,
+  deleteUser,
   signIn,
 };
