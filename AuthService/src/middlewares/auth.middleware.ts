@@ -31,14 +31,11 @@ export const auth = (roles: AppRole[]) => {
       // 2. Verify the token using the secret from the auth config
       const decodedToken = jwt.verify(
         token,
-        serverConfig.JWT_SECRET as string,
+        serverConfig.ACCESS_TOKEN_SECRET as string,
       ) as DecodedToken; // Type assertion for better type safety
 
       // If the token is valid, attach user information to the request object
       req.user = decodedToken;
-
-      console.log(req.user);
-      console.log(decodedToken);
 
       // Check if the user has the required role
       if (roles && !roles.includes(decodedToken.role)) {

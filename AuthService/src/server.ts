@@ -1,4 +1,5 @@
 import express from "express";
+import cookieParser from "cookie-parser";
 import { serverConfig } from "./config";
 import router from "./routers/v1/index.router";
 
@@ -12,6 +13,7 @@ import { proxyMiddleware } from "./middlewares/proxy.middleware";
 const app = express();
 
 app.use(express.json());
+app.use(cookieParser());
 
 /**
  * Registering all the routers and their corresponding routes with out app server object.

@@ -11,8 +11,10 @@ type ServerConfig = {
   DATABASE_NAME: string;
   connectionLimit: number;
   SALT_ROUNDS: number;
-  JWT_SECRET: string | undefined;
-  JWT_EXPIRES_IN: string | undefined;
+  ACCESS_TOKEN_SECRET: string;
+  ACCESS_TOKEN_EXPIRES_IN: string;
+  REFRESH_TOKEN_SECRET: string;
+  REFRESH_TOKEN_EXPIRES_IN: string;
   HOTEL_SERVICE_URL: string;
 };
 
@@ -33,7 +35,9 @@ export const serverConfig: ServerConfig = {
   DATABASE_NAME: process.env.DATABASE_NAME || "airbnb_dev_booking",
   connectionLimit: Number(process.env.connectionLimit) || 5,
   SALT_ROUNDS: Number(process.env.SALT_ROUNDS) || 10,
-  JWT_SECRET: process.env.JWT_SECRET,
-  JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN,
+  ACCESS_TOKEN_SECRET: process.env.ACCESS_TOKEN_SECRET as string,
+  ACCESS_TOKEN_EXPIRES_IN: process.env.ACCESS_TOKEN_EXPIRES_IN as string,
+  REFRESH_TOKEN_SECRET: process.env.REFRESH_TOKEN_SECRET as string,
+  REFRESH_TOKEN_EXPIRES_IN: process.env.REFRESH_TOKEN_EXPIRES_IN as string,
   HOTEL_SERVICE_URL: process.env.HOTEL_SERVICE_URL as string,
 };

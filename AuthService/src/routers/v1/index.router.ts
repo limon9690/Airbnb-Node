@@ -20,6 +20,19 @@ router.post(
   validateRequestBody(signInSchema),
   UserController.signIn,
 );
+
+router.post(
+  "/logout",
+  auth([AppRole.USER, AppRole.ADMIN, AppRole.OWNER]),
+  UserController.logout,
+);
+
+router.post(
+  "/refresh-token",
+  auth([AppRole.USER, AppRole.ADMIN, AppRole.OWNER]),
+  UserController.refreshToken,
+);
+
 router.get("/users", auth([AppRole.ADMIN]), UserController.getAllUsers);
 
 router.get(

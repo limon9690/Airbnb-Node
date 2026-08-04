@@ -20,10 +20,44 @@ const signUp = async (req: Request, res: Response, next: NextFunction) => {
 const signIn = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const payload = req.body;
-    const data = await UserService.signIn(payload);
+    const data = await UserService.signIn(payload, res);
 
     res.status(StatusCodes.OK).json({
       message: "User signed in successfully",
+      data,
+      success: true,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const logout = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const id = req?.user?.id;
+    await UserService.logout(Number(id), res);
+
+    res.status(StatusCodes.OK).json({
+      message: "User logged out successfully",
+      data: null,
+      success: true,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const refreshToken = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const id = req?.user?.id;
+    const data = await UserService.refreshToken(Number(id), req);
+
+    res.status(StatusCodes.OK).json({
+      message: "Token refreshed successfully",
       data,
       success: true,
     });
@@ -86,4 +120,6 @@ export const UserController = {
   getAllUsers,
   deleteUser,
   signIn,
+  logout,
+  refreshToken,
 };

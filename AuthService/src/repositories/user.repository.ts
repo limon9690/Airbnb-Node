@@ -13,6 +13,20 @@ const getUserById = async (id: number) => {
   });
 };
 
+const updateRefreshToken = async (id: number, refreshToken: string) => {
+  return await prisma.user.update({
+    where: { id },
+    data: { refreshToken },
+  });
+};
+
+const deleteRefreshToken = async (id: number) => {
+  return await prisma.user.update({
+    where: { id },
+    data: { refreshToken: null },
+  });
+};
+
 const getAllUsers = async () => {
   return await prisma.user.findMany();
 };
@@ -35,4 +49,6 @@ export const UserRepository = {
   getAllUsers,
   deleteUserById,
   getUserByEmail,
+  updateRefreshToken,
+  deleteRefreshToken,
 };

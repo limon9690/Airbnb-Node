@@ -3,9 +3,15 @@ import { signInDTO, signUpDTO } from "../dto/user.dto";
 import { UserRepository } from "../repositories/user.repository";
 import bcrypt from "bcrypt";
 import { BadRequestError, NotFoundError } from "../utils/errors/app.error";
-import { generateJWTToken } from "../utils/helpers/jwt.helper";
+import {
+  generateAccessToken,
+  generateRefreshToken,
+} from "../utils/helpers/jwt.helper";
 import { UserProfile } from "../types/user.type";
 import { User } from "../../generated/prisma/client";
+import { setRefreshTokenInCookie } from "../utils/helpers/cookie.helper";
+import { Request, Response } from "express";
+import jwt from "jsonwebtoken";
 
 const signUp = async (payload: signUpDTO) => {
   const existingUser = await UserRepository.getUserByEmail(payload.email);
@@ -35,7 +41,7 @@ const signUp = async (payload: signUpDTO) => {
   return data;
 };
 
-const signIn = async (payload: signInDTO) => {
+const signIn = async (payload: signInDTO, res: Response) => {
   const user = await UserRepository.getUserByEmail(payload.email);
 
   if (!user) {
@@ -48,11 +54,23 @@ const signIn = async (payload: signInDTO) => {
     throw new NotFoundError("Invalid credentials");
   }
 
-  const token = generateJWTToken({
+  const accessToken = generateAccessToken({
     id: user.id,
     email: user.email,
     role: user.role,
   });
+
+  const refreshToken = generateRefreshToken({
+    id: user.id,
+    email: user.email,
+    role: user.role,
+  });
+
+  await UserRepository.updateRefreshToken(user.id, refreshToken);
+
+  res.clearCookie("refreshToken");
+  setRefreshTokenInCookie(res, refreshToken);
+
   const userData: UserProfile = {
     id: user.id,
     email: user.email,
@@ -62,7 +80,48 @@ const signIn = async (payload: signInDTO) => {
     updatedAt: user.updatedAt,
   };
 
-  return { data: userData, token };
+  return { data: userData, accessToken };
+};
+
+const logout = async (id: number, res: Response) => {
+  await UserRepository.deleteRefreshToken(id);
+  res.clearCookie("refreshToken");
+};
+
+const refreshToken = async (id: number, req: Request) => {
+  const user = await UserRepository.getUserById(id);
+  const refreshToken = req.cookies.refreshToken;
+
+  if (!user) {
+    throw new NotFoundError("User not found");
+  }
+
+  if (!refreshToken) {
+    throw new BadRequestError("Refresh token is missing");
+  }
+
+  if (!user.refreshToken) {
+    throw new BadRequestError("No refresh token found for this user");
+  }
+
+  if (user.refreshToken !== refreshToken) {
+    throw new BadRequestError("Invalid refresh token");
+  }
+
+  if (
+    jwt.verify(refreshToken, serverConfig.REFRESH_TOKEN_SECRET as string) ===
+    null
+  ) {
+    throw new BadRequestError("Refresh token has expired");
+  }
+
+  const newAccessToken = generateAccessToken({
+    id: user.id,
+    email: user.email,
+    role: user.role,
+  });
+
+  return newAccessToken;
 };
 
 const getUserProfile = async (id: number) => {
@@ -115,4 +174,6 @@ export const UserService = {
   getAllUsers,
   deleteUser,
   signIn,
+  logout,
+  refreshToken,
 };
