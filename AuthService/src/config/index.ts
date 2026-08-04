@@ -13,6 +13,7 @@ type ServerConfig = {
   SALT_ROUNDS: number;
   JWT_SECRET: string | undefined;
   JWT_EXPIRES_IN: string | undefined;
+  HOTEL_SERVICE_URL: string;
 };
 
 function loadEnv() {
@@ -34,4 +35,5 @@ export const serverConfig: ServerConfig = {
   SALT_ROUNDS: Number(process.env.SALT_ROUNDS) || 10,
   JWT_SECRET: process.env.JWT_SECRET,
   JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN,
+  HOTEL_SERVICE_URL: process.env.HOTEL_SERVICE_URL as string,
 };
