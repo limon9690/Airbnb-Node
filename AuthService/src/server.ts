@@ -8,7 +8,6 @@ import {
 } from "./middlewares/error.middleware";
 import logger from "./config/logger.config";
 import { attachCorrelationIdMiddleware } from "./middlewares/correlation.middleware";
-// import { auth } from "./middlewares/auth.middleware";
 import { proxyMiddleware } from "./middlewares/proxy.middleware";
 const app = express();
 

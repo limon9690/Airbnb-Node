@@ -1,23 +1,15 @@
 import { NextFunction, Request, Response } from "express";
 import { UserService } from "../services/user.service";
 import { StatusCodes } from "http-status-codes/build/cjs/status-codes";
-import { UserProfile } from "../types/user.type";
 
 const signUp = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const payload = req.body;
     const user = await UserService.signUp(payload);
-    const data: UserProfile = {
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      createdAt: user.createdAt,
-      updatedAt: user.updatedAt,
-    };
 
     res.status(StatusCodes.CREATED).json({
       message: "User created successfully",
-      data,
+      data: user,
       success: true,
     });
   } catch (error) {

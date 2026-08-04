@@ -5,6 +5,7 @@ import bcrypt from "bcrypt";
 import { BadRequestError, NotFoundError } from "../utils/errors/app.error";
 import { generateJWTToken } from "../utils/helpers/jwt.helper";
 import { UserProfile } from "../types/user.type";
+import { User } from "../../generated/prisma/client";
 
 const signUp = async (payload: signUpDTO) => {
   const existingUser = await UserRepository.getUserByEmail(payload.email);
@@ -26,6 +27,7 @@ const signUp = async (payload: signUpDTO) => {
     id: user.id,
     name: user.name,
     email: user.email,
+    role: user.role,
     createdAt: user.createdAt,
     updatedAt: user.updatedAt,
   };
@@ -46,11 +48,16 @@ const signIn = async (payload: signInDTO) => {
     throw new NotFoundError("Invalid credentials");
   }
 
-  const token = generateJWTToken({ id: user.id, email: user.email });
+  const token = generateJWTToken({
+    id: user.id,
+    email: user.email,
+    role: user.role,
+  });
   const userData: UserProfile = {
     id: user.id,
     email: user.email,
     name: user.name,
+    role: user.role,
     createdAt: user.createdAt,
     updatedAt: user.updatedAt,
   };
@@ -69,6 +76,7 @@ const getUserProfile = async (id: number) => {
     id: user.id,
     name: user.name,
     email: user.email,
+    role: user.role,
     createdAt: user.createdAt,
     updatedAt: user.updatedAt,
   };
@@ -77,14 +85,27 @@ const getUserProfile = async (id: number) => {
 };
 
 const getAllUsers = async () => {
-  return await UserRepository.getAllUsers();
+  const users = await UserRepository.getAllUsers();
+
+  const userProfiles: UserProfile[] = users.map((user: User) => ({
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    role: user.role,
+    createdAt: user.createdAt,
+    updatedAt: user.updatedAt,
+  }));
+
+  return userProfiles;
 };
 
 const deleteUser = async (id: number) => {
   const user = await UserRepository.getUserById(id);
+
   if (!user) {
     throw new NotFoundError("User not found");
   }
+
   return await UserRepository.deleteUserById(id);
 };
 
