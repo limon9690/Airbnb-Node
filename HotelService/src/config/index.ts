@@ -9,7 +9,8 @@ type ServerConfig = {
     DATABASE_USER: string,
     DATABASE_PASSWORD: string,
     DATABASE_NAME: string,
-    connectionLimit: number
+    connectionLimit: number,
+    ROOM_GENERATION_BATCH_SIZE: number
 }
 
 function loadEnv() {
@@ -27,5 +28,6 @@ export const serverConfig: ServerConfig = {
     DATABASE_USER: process.env.DATABASE_USER as string,
     DATABASE_PASSWORD: process.env.DATABASE_PASSWORD as string,
     DATABASE_NAME: process.env.DATABASE_NAME as string,
-    connectionLimit: Number(process.env.connectionLimit) || 5
+    connectionLimit: Number(process.env.connectionLimit) || 5,
+    ROOM_GENERATION_BATCH_SIZE: Number(process.env.ROOM_GENERATION_BATCH_SIZE) || 100
 };
