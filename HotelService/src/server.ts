@@ -10,6 +10,7 @@ import { HotelRouter } from "./routers/hotel.router";
 import RoomSchedulerRouter from "./routers/roomScheduler.router";
 import { startScheduler } from "./scheduler/roomScheduler";
 import "./workers/roomGeneration.woker";
+import { roomRouter } from "./routers/room.router";
 
 const app = express();
 app.use(express.json());
@@ -21,6 +22,7 @@ app.use(express.json());
 app.use(attachCorrelationIdMiddleware);
 app.use("/api/v1/hotels", HotelRouter);
 app.use("/api/v1/scheduler", RoomSchedulerRouter);
+app.use("/api/v1/rooms", roomRouter);
 
 /**
  * Add the error handler middleware

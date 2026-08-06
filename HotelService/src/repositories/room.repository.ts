@@ -51,9 +51,26 @@ const findLatestDatesForAllCategories = async () => {
     }));
 };
 
+const findByRoomCategoryIdAndDateRange = async (
+  roomCategoryId: number,
+  startDate: Date,
+  endDate: Date,
+) => {
+  return await prisma.room.findMany({
+    where: {
+      roomCategoryId,
+      dateOfAvailability: {
+        gte: startDate,
+        lte: endDate,
+      },
+    },
+  });
+};
+
 export const roomRepository = {
   findByRoomCategoryIdAndDate,
   bulkCreate,
   findLatestDateByRoomCategoryId,
   findLatestDatesForAllCategories,
+  findByRoomCategoryIdAndDateRange,
 };
