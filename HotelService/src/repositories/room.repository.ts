@@ -1,7 +1,10 @@
 import { Prisma } from "../../generated/prisma/client";
 import { prisma } from "../utils/lib/prisma";
 
-const findByRoomCategoryIdAndDate = async (roomCategoryId: number, dateOfAvailability: Date) => {
+const findByRoomCategoryIdAndDate = async (
+  roomCategoryId: number,
+  dateOfAvailability: Date,
+) => {
   return await prisma.room.findFirst({
     where: {
       roomCategoryId,
@@ -16,7 +19,41 @@ const bulkCreate = async (rooms: Prisma.RoomCreateManyInput[]) => {
   });
 };
 
+const findLatestDateByRoomCategoryId = async (roomCategoryId: number) => {
+  const result = await prisma.room.findFirst({
+    where: {
+      roomCategoryId,
+    },
+    orderBy: {
+      dateOfAvailability: "desc",
+    },
+    select: {
+      dateOfAvailability: true,
+    },
+  });
+
+  return result?.dateOfAvailability ?? null;
+};
+
+const findLatestDatesForAllCategories = async () => {
+  const results = await prisma.room.groupBy({
+    by: ["roomCategoryId"],
+    _max: {
+      dateOfAvailability: true,
+    },
+  });
+
+  return results
+    .filter((result) => result._max.dateOfAvailability !== null)
+    .map((result) => ({
+      roomCategoryId: result.roomCategoryId,
+      latestDate: result._max.dateOfAvailability as Date,
+    }));
+};
+
 export const roomRepository = {
   findByRoomCategoryIdAndDate,
   bulkCreate,
+  findLatestDateByRoomCategoryId,
+  findLatestDatesForAllCategories,
 };

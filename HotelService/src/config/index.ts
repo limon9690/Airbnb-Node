@@ -13,6 +13,8 @@ type ServerConfig = {
   ROOM_GENERATION_BATCH_SIZE: number;
   REDIS_HOST: string;
   REDIS_PORT: number;
+  ROOM_CRON: string;
+  ROOM_AVAILABILITY_HORIZON_DAYS: number;
 };
 
 function loadEnv() {
@@ -35,4 +37,7 @@ export const serverConfig: ServerConfig = {
     Number(process.env.ROOM_GENERATION_BATCH_SIZE) || 100,
   REDIS_HOST: process.env.REDIS_HOST as string,
   REDIS_PORT: Number(process.env.REDIS_PORT) || 6379,
+  ROOM_CRON: process.env.ROOM_CRON || "*/5 * * * *",
+  ROOM_AVAILABILITY_HORIZON_DAYS:
+    Number(process.env.ROOM_AVAILABILITY_HORIZON_DAYS) || 2,
 };
