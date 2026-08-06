@@ -44,7 +44,7 @@ model Room {
   dateOfAvailability     DateTime
   createdAt              DateTime     @default(now())
   updatedAt              DateTime     @updatedAt
-  bookingId              Int?  
+  bookingId              Int?          
 
   RoomCategory           RoomCategory   @relation(fields: [roomCategoryId], references: [id])
   roomCategoryId         Int 

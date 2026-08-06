@@ -8,7 +8,6 @@ const connection = connectToRedis();
 export const emailWorker = new Worker(
   EMAIL_QUEUE_NAME,
   async (job) => {
-    console.log(job.data);
     await sendEmail(job.data);
   },
   { connection },
