@@ -8,7 +8,13 @@ const findByRoomCategoryIdAndDateRange = async (
   next: NextFunction,
 ) => {
   try {
-    const result = roomService.findByRoomCategoryIdAndDateRange(req.body);
+    const { roomCategoryId, startDate, endDate } = req.query;
+
+    const result = await roomService.findByRoomCategoryIdAndDateRange({
+      roomCategoryId: Number(roomCategoryId),
+      startDate: String(startDate),
+      endDate: String(endDate),
+    });
 
     res.status(StatusCodes.OK).json({
       message: "Rooms retrieved successfully",
@@ -20,6 +26,25 @@ const findByRoomCategoryIdAndDateRange = async (
   }
 };
 
+const updateBookingIdToRooms = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const result = await roomService.updateBookingIdToRooms(req.body);
+
+    res.status(StatusCodes.OK).json({
+      message: "Booking ID updated successfully for rooms",
+      data: result,
+      success: true,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const hotelController = {
   findByRoomCategoryIdAndDateRange,
+  updateBookingIdToRooms,
 };
