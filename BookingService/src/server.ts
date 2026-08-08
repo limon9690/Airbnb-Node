@@ -30,13 +30,13 @@ app.listen(serverConfig.PORT, () => {
   logger.info(`Server is running on http://localhost:${serverConfig.PORT}`);
   logger.info(`Press Ctrl+C to stop the server.`);
 
-  addToEmailQueue("sendWelcomeEmail", {
-    from: "support@ihlimon.tech",
-    to: "limon.hossain26@yahoo.com",
-    subject: "Welcome to Airbnb!",
-    templateID: "welcome-email",
-    params: {
-      name: "John Doe",
-    },
-  });
+  // addToEmailQueue("sendWelcomeEmail", {
+  //   from: "support@ihlimon.tech",
+  //   to: "limon.hossain26@yahoo.com",
+  //   subject: "Welcome to Airbnb!",
+  //   templateID: "welcome-email",
+  //   params: {
+  //     name: "John Doe",
+  //   },
+  // });
 });

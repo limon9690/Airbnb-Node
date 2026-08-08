@@ -4,6 +4,6 @@ export type CreateBookingDto = {
   roomCategoryId: number;
   bookingAmount: number;
   totalGuests: number;
-  checkInDate: String;
-  checkOutDate: String;
+  checkInDate: string;
+  checkOutDate: string;
 };

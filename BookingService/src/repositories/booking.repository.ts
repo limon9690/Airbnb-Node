@@ -5,8 +5,18 @@ import { prisma } from "../utils/lib/prisma";
 import { validate as isValidUUID } from "uuid";
 
 const createBooking = async (bookingData: CreateBookingDto) => {
+  const data = {
+    userId: bookingData.userId,
+    hotelId: bookingData.hotelId,
+    roomCategoryId: bookingData.roomCategoryId,
+    bookingAmount: bookingData.bookingAmount,
+    totalGuests: bookingData.totalGuests,
+    checkInDate: new Date(bookingData.checkInDate),
+    checkOutDate: new Date(bookingData.checkOutDate),
+  };
+
   return await prisma.booking.create({
-    data: bookingData,
+    data,
   });
 };
 
