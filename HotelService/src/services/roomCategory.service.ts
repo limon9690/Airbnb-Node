@@ -1,14 +1,14 @@
 import { createRoomCategoryDTO } from "../dto/roomCategory.dto";
 import { prisma } from "../utils/lib/prisma";
+import { hotelService } from "./hotel.service";
+import { AppRole } from "../types/auth.type";
+import { NotFoundError } from "../utils/errors/app.error";
 
-const createRoomCategory = async (roomCategoryData: createRoomCategoryDTO) => {
-  const hotel = await prisma.hotel.findUnique({
-    where: { id: roomCategoryData.hotelId },
-  });
-
-  if (!hotel) {
-    throw new Error(`Hotel with ID ${roomCategoryData.hotelId} not found`);
-  }
+const createRoomCategory = async (
+  roomCategoryData: createRoomCategoryDTO,
+  requester: { id: number; role: AppRole },
+) => {
+  await hotelService.assertOwnership(roomCategoryData.hotelId, requester);
 
   const roomCategory = await prisma.roomCategory.create({
     data: {
@@ -40,7 +40,7 @@ const getAllRoomCategoriesByHotelId = async (hotelId: number) => {
   });
 
   if (!hotel) {
-    throw new Error(`Hotel with ID ${hotelId} not found`);
+    throw new NotFoundError(`Hotel with ID ${hotelId} not found`);
   }
 
   const roomCategories = await prisma.roomCategory.findMany({

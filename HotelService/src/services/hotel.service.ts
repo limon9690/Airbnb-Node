@@ -54,5 +54,6 @@ export const hotelService = {
     getAllHotels,
     getHotelById,
     updateHotel,
-    deleteHotel
+    deleteHotel,
+    assertOwnership,
 }

@@ -7,6 +7,8 @@ import {
 } from "../validators/hotel.validator";
 import { roomGenerationController } from "../controllers/roomGeneration.controller";
 import { RoomGenerationRequestSchema } from "../dto/roomGeneration.dto";
+import { roomCategoryController } from "../controllers/roomCategory.controller";
+import { createRoomCategorySchema } from "../validators/roomCategory.validator";
 import { auth } from "../middlewares/auth.middleware";
 import { AppRole } from "../types/auth.type";
 
@@ -45,6 +47,17 @@ router.post(
   auth([AppRole.OWNER, AppRole.ADMIN]),
   validateRequestBody(RoomGenerationRequestSchema),
   roomGenerationController.generateRoomAvailability,
+);
+
+router.post(
+  "/:hotelId/room-categories",
+  auth([AppRole.OWNER, AppRole.ADMIN]),
+  validateRequestBody(createRoomCategorySchema),
+  roomCategoryController.createRoomCategory,
+);
+router.get(
+  "/:hotelId/room-categories",
+  roomCategoryController.getAllRoomCategoriesByHotelId,
 );
 
 export const HotelRouter = router;
