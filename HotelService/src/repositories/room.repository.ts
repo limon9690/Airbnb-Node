@@ -59,10 +59,14 @@ const findByRoomCategoryIdAndDateRange = async (
   return await prisma.room.findMany({
     where: {
       roomCategoryId,
+      bookingId: null,
       dateOfAvailability: {
         gte: startDate,
         lte: endDate,
       },
+    },
+    orderBy: {
+      dateOfAvailability: "asc",
     },
   });
 };
@@ -73,9 +77,21 @@ const updateBookingIdToRooms = async (roomIds: number[], bookingId: number) => {
       id: {
         in: roomIds,
       },
+      bookingId: null,
     },
     data: {
       bookingId,
+    },
+  });
+};
+
+const releaseRoomsByBookingId = async (bookingId: number) => {
+  return await prisma.room.updateMany({
+    where: {
+      bookingId,
+    },
+    data: {
+      bookingId: null,
     },
   });
 };
@@ -87,4 +103,5 @@ export const roomRepository = {
   findLatestDatesForAllCategories,
   findByRoomCategoryIdAndDateRange,
   updateBookingIdToRooms,
+  releaseRoomsByBookingId,
 };

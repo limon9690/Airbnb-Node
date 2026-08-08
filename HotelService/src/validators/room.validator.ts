@@ -10,3 +10,7 @@ export const updateBookingIdToRoomsSchema = z.object({
   roomIds: z.array(z.number().int().positive()),
   bookingId: z.number().int().positive(),
 });
+
+export const releaseRoomsByBookingIdSchema = z.object({
+  bookingId: z.number().int().positive(),
+});

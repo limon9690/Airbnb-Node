@@ -44,7 +44,26 @@ const updateBookingIdToRooms = async (
   }
 };
 
+const releaseRoomsByBookingId = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const result = await roomService.releaseRoomsByBookingId(req.body);
+
+    res.status(StatusCodes.OK).json({
+      message: "Rooms released successfully",
+      data: result,
+      success: true,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const hotelController = {
   findByRoomCategoryIdAndDateRange,
   updateBookingIdToRooms,
+  releaseRoomsByBookingId,
 };

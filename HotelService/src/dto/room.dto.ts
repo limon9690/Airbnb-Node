@@ -8,3 +8,7 @@ export type updateBookingIdToRoomsDTO = {
   roomIds: number[];
   bookingId: number;
 };
+
+export type releaseRoomsByBookingIdDTO = {
+  bookingId: number;
+};

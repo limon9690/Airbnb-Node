@@ -41,3 +41,18 @@ export const updateBookingIdToRooms = async (
     throw error;
   }
 };
+
+export const releaseRoomsByBookingId = async (bookingId: number) => {
+  try {
+    const response = await axios.put(
+      `${process.env.HOTEL_SERVICE_URL}/release-booking-rooms`,
+      {
+        bookingId,
+      },
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error releasing rooms for booking:", error);
+    throw error;
+  }
+};

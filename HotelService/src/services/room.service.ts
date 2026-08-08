@@ -1,5 +1,6 @@
 import {
   findByRoomCategoryIdAndDateRangeDTO,
+  releaseRoomsByBookingIdDTO,
   updateBookingIdToRoomsDTO,
 } from "../dto/room.dto";
 import { roomRepository } from "../repositories/room.repository";
@@ -22,10 +23,15 @@ const findByRoomCategoryIdAndDateRange = async (
   const { roomCategoryId, startDate, endDate } =
     findByRoomCategoryIdAndDateRangeDTO;
 
+  // endDate is the checkout date; the checkout night itself isn't consumed,
+  // so the last night of the stay is the day before checkout.
+  const lastNight = new Date(endDate);
+  lastNight.setDate(lastNight.getDate() - 1);
+
   return await roomRepository.findByRoomCategoryIdAndDateRange(
     roomCategoryId,
     startOfDay(new Date(startDate)),
-    endOfDay(new Date(endDate)),
+    endOfDay(lastNight),
   );
 };
 
@@ -37,7 +43,16 @@ const updateBookingIdToRooms = async (
   return await roomRepository.updateBookingIdToRooms(roomIds, bookingId);
 };
 
+const releaseRoomsByBookingId = async (
+  releaseRoomsByBookingIdDTO: releaseRoomsByBookingIdDTO,
+) => {
+  const { bookingId } = releaseRoomsByBookingIdDTO;
+
+  return await roomRepository.releaseRoomsByBookingId(bookingId);
+};
+
 export const roomService = {
   findByRoomCategoryIdAndDateRange,
   updateBookingIdToRooms,
+  releaseRoomsByBookingId,
 };

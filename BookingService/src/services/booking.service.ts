@@ -1,10 +1,18 @@
-import { getAvailableRooms, updateBookingIdToRooms } from "../api/rooms.api";
+import {
+  getAvailableRooms,
+  releaseRoomsByBookingId,
+  updateBookingIdToRooms,
+} from "../api/rooms.api";
 import { serverConfig } from "../config";
 import { redlock } from "../config/redis.config";
 import { CreateBookingDto } from "../dto/booking.dto";
 import { addToEmailQueue } from "../producers/email.producer";
 import { bookingRepository } from "../repositories/booking.repository";
-import { InternalServerError, NotFoundError } from "../utils/errors/app.error";
+import {
+  ConflictError,
+  InternalServerError,
+  NotFoundError,
+} from "../utils/errors/app.error";
 import { generateIdempotencyKey } from "../utils/helpers/generateIdempotencyKey";
 import { prisma } from "../utils/lib/prisma";
 
@@ -21,11 +29,12 @@ const createBooking = async (bookingData: CreateBookingDto) => {
   try {
     await redlock.acquire([bookingResource], serverConfig.BOOKING_LOCK_TTL);
 
-    const availableRooms = await getAvailableRooms(
+    const availableRoomsResponse = await getAvailableRooms(
       bookingData.roomCategoryId,
       bookingData.checkInDate,
       bookingData.checkOutDate,
     );
+    const availableRooms: AvailableRoom[] = availableRoomsResponse.data ?? [];
 
     const totalNights = Math.ceil(
       (new Date(bookingData.checkOutDate).getTime() -
@@ -39,23 +48,40 @@ const createBooking = async (bookingData: CreateBookingDto) => {
       );
     }
 
-    const booking = await bookingRepository.createBooking(bookingData);
-    const idempotencyKey = generateIdempotencyKey();
+    // Only claim exactly as many room-nights as the stay needs.
+    const roomIdsToClaim = availableRooms
+      .slice(0, totalNights)
+      .map((room) => room.id);
 
+    const booking = await bookingRepository.createBooking(bookingData);
+
+    // Claim is conditional (bookingId must still be null) so a concurrent
+    // booking racing for the same rooms can't silently get overwritten.
+    const claimResult = await updateBookingIdToRooms(
+      booking.id,
+      roomIdsToClaim,
+    );
+    const claimedCount = claimResult.data?.count ?? 0;
+
+    if (claimedCount !== roomIdsToClaim.length) {
+      await releaseRoomsByBookingId(booking.id);
+      await bookingRepository.cancelBooking(booking.id);
+      throw new ConflictError(
+        "Some rooms were booked by someone else, please try again",
+      );
+    }
+
+    const idempotencyKey = generateIdempotencyKey();
     const idempotencyRecord = await bookingRepository.createIdempotencyKey(
       idempotencyKey,
       booking.id,
     );
 
-    console.log(availableRooms);
-
-    await updateBookingIdToRooms(
-      booking.id,
-      availableRooms.data?.map((room: AvailableRoom) => room.id),
-    );
-
     return { booking: booking, idempotencyKey: idempotencyRecord.idemKey };
   } catch (error: any) {
+    if (error instanceof NotFoundError || error instanceof ConflictError) {
+      throw error;
+    }
     throw new InternalServerError(error.message);
   }
 };
