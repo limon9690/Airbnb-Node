@@ -11,9 +11,7 @@ export const sendEmail = async (payload: NotificationDTO) => {
       subject: subject,
       template: {
         id: templateID,
-        variables: {
-          name: params.name,
-        },
+        variables: params,
       },
     });
   } catch (error: any) {

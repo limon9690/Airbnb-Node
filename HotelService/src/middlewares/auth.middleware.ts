@@ -7,6 +7,7 @@ import { AppRole } from "../types/auth.type";
 export interface DecodedToken {
   id: number;
   email: string;
+  name: string;
   role: AppRole;
 }
 declare global {

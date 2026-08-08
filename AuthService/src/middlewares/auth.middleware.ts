@@ -7,6 +7,7 @@ import { AppRole } from "../../generated/prisma/client";
 export interface DecodedToken {
   id: number;
   email: string;
+  name: string;
   role: AppRole;
 }
 declare global {

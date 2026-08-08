@@ -57,6 +57,7 @@ const signIn = async (payload: signInDTO, res: Response) => {
   const accessToken = generateAccessToken({
     id: user.id,
     email: user.email,
+    name: user.name,
     role: user.role,
   });
 
@@ -118,6 +119,7 @@ const refreshToken = async (id: number, req: Request) => {
   const newAccessToken = generateAccessToken({
     id: user.id,
     email: user.email,
+    name: user.name,
     role: user.role,
   });
 

@@ -86,7 +86,10 @@ const createBooking = async (bookingData: CreateBookingDto) => {
   }
 };
 
-const confirmBooking = async (idempotencyKey: string) => {
+const confirmBooking = async (
+  idempotencyKey: string,
+  recipient: { email: string; name: string },
+) => {
   return await prisma.$transaction(async (tx) => {
     const idempotencyRecord = await bookingRepository.getIdempotencyKey(
       tx,
@@ -108,13 +111,17 @@ const confirmBooking = async (idempotencyKey: string) => {
 
     await bookingRepository.finalizeIdempotencyKey(tx, idempotencyKey);
 
-    addToEmailQueue("sendWelcomeEmail", {
+    addToEmailQueue("sendBookingConfirmationEmail", {
       from: "support@ihlimon.tech",
-      to: "limon.hossain26@yahoo.com",
-      subject: "Welcome to Airbnb!",
-      templateID: "welcome-email",
+      to: recipient.email,
+      subject: "Your booking is confirmed!",
+      templateID: "booking-confirmation-airbnb",
       params: {
-        name: "John Doe",
+        name: recipient.name,
+        checkInDate: booking.checkInDate.toISOString().split("T")[0],
+        checkOutDate: booking.checkOutDate.toISOString().split("T")[0],
+        totalGuests: booking.totalGuests,
+        bookingAmount: booking.bookingAmount,
       },
     });
 

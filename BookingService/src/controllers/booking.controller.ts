@@ -22,7 +22,10 @@ const confirmBooking = async (req: Request, res: Response, next: NextFunction) =
     try {
         const { idempotencyKey } = req.params;
 
-        const booking = await bookingService.confirmBooking(idempotencyKey);
+        const booking = await bookingService.confirmBooking(idempotencyKey, {
+            email: req.user!.email,
+            name: req.user!.name,
+        });
 
         res.status(200).json({
         bookingId: booking.id,
