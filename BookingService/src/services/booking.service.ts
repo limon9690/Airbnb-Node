@@ -145,8 +145,8 @@ const confirmBooking = async (
         name: recipient.name,
         checkInDate: booking.checkInDate.toISOString().split("T")[0],
         checkOutDate: booking.checkOutDate.toISOString().split("T")[0],
-        totalGuests: booking.totalGuests,
-        bookingAmount: booking.bookingAmount,
+        totalGuests: String(booking.totalGuests),
+        bookingAmount: String(booking.bookingAmount),
       },
     });
 

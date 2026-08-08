@@ -24,6 +24,6 @@ export const apiLimiter = rateLimit({
 // Stricter limiter for sensitive endpoints (e.g., auth, login)
 export const authLimiter = rateLimit({
   windowMs: 60 * 1000, // 1 minute window
-  limit: 5, // Limit each IP to 5 login requests per minute
+  limit: 10, // Limit each IP to 5 login requests per minute
   message: "Too many login attempts. Please try again in a minute.",
 });
