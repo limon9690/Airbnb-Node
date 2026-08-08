@@ -6,6 +6,7 @@ import {
   updateBookingIdToRoomsSchema,
 } from "../validators/room.validator";
 import { validateQueryParams, validateRequestBody } from "../validators";
+import { internalAuth } from "../middlewares/internalAuth.middleware";
 
 const router = express.Router();
 
@@ -17,12 +18,14 @@ router.get(
 
 router.put(
   "/update-booking-id",
+  internalAuth,
   validateRequestBody(updateBookingIdToRoomsSchema),
   hotelController.updateBookingIdToRooms,
 );
 
 router.put(
   "/release-booking-rooms",
+  internalAuth,
   validateRequestBody(releaseRoomsByBookingIdSchema),
   hotelController.releaseRoomsByBookingId,
 );

@@ -15,6 +15,8 @@ type ServerConfig = {
   REDIS_PORT: number;
   ROOM_CRON: string;
   ROOM_AVAILABILITY_HORIZON_DAYS: number;
+  ACCESS_TOKEN_SECRET: string;
+  INTERNAL_API_KEY: string;
 };
 
 function loadEnv() {
@@ -40,4 +42,6 @@ export const serverConfig: ServerConfig = {
   ROOM_CRON: process.env.ROOM_CRON || "*/5 * * * *",
   ROOM_AVAILABILITY_HORIZON_DAYS:
     Number(process.env.ROOM_AVAILABILITY_HORIZON_DAYS) || 2,
+  ACCESS_TOKEN_SECRET: process.env.ACCESS_TOKEN_SECRET as string,
+  INTERNAL_API_KEY: process.env.INTERNAL_API_KEY as string,
 };

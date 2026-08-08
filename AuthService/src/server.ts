@@ -12,7 +12,6 @@ import { attachCorrelationIdMiddleware } from "./middlewares/correlation.middlew
 import { proxyMiddleware } from "./middlewares/proxy.middleware";
 const app = express();
 
-app.use(express.json());
 app.use(cookieParser());
 
 /**
@@ -20,8 +19,10 @@ app.use(cookieParser());
  */
 
 app.use(attachCorrelationIdMiddleware);
-app.use("/api/v1/auth", router);
+
+app.use("/api/v1/auth", express.json(), router);
 app.use("/api/v1/hotels", proxyMiddleware(serverConfig.HOTEL_SERVICE_URL));
+app.use("/api/v1/bookings", proxyMiddleware(serverConfig.BOOKING_SERVICE_URL));
 
 /**
  * Add the error handler middleware

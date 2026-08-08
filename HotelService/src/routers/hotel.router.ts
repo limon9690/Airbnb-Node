@@ -7,6 +7,8 @@ import {
 } from "../validators/hotel.validator";
 import { roomGenerationController } from "../controllers/roomGeneration.controller";
 import { RoomGenerationRequestSchema } from "../dto/roomGeneration.dto";
+import { auth } from "../middlewares/auth.middleware";
+import { AppRole } from "../types/auth.type";
 
 const router = express.Router();
 
@@ -19,6 +21,7 @@ router.get("/health", (req, res) => {
 
 router.post(
   "/",
+  auth([AppRole.OWNER, AppRole.ADMIN]),
   validateRequestBody(createHotelSchema),
   hotelController.createHotel,
 );
@@ -26,14 +29,20 @@ router.get("/", hotelController.getAllHotels);
 router.get("/:id", hotelController.getHotelById);
 router.put(
   "/:id",
+  auth([AppRole.OWNER, AppRole.ADMIN]),
   validateRequestBody(updateHotelSchema),
   hotelController.updateHotel,
 );
 
-router.delete("/:id", hotelController.deleteHotel);
+router.delete(
+  "/:id",
+  auth([AppRole.OWNER, AppRole.ADMIN]),
+  hotelController.deleteHotel,
+);
 
 router.post(
   "/generate-rooms",
+  auth([AppRole.OWNER, AppRole.ADMIN]),
   validateRequestBody(RoomGenerationRequestSchema),
   roomGenerationController.generateRoomAvailability,
 );

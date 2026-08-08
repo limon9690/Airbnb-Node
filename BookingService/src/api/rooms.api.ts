@@ -1,4 +1,9 @@
 import axios from "axios";
+import { serverConfig } from "../config";
+
+const internalHeaders = {
+  "x-internal-api-key": serverConfig.INTERNAL_API_KEY,
+};
 
 export const getAvailableRooms = async (
   roomCategoryId: number,
@@ -34,6 +39,7 @@ export const updateBookingIdToRooms = async (
         bookingId,
         roomIds,
       },
+      { headers: internalHeaders },
     );
     return response.data;
   } catch (error) {
@@ -49,6 +55,7 @@ export const releaseRoomsByBookingId = async (bookingId: number) => {
       {
         bookingId,
       },
+      { headers: internalHeaders },
     );
     return response.data;
   } catch (error) {

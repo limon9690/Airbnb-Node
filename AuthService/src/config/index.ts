@@ -16,6 +16,7 @@ type ServerConfig = {
   REFRESH_TOKEN_SECRET: string;
   REFRESH_TOKEN_EXPIRES_IN: string;
   HOTEL_SERVICE_URL: string;
+  BOOKING_SERVICE_URL: string;
 };
 
 function loadEnv() {
@@ -40,4 +41,5 @@ export const serverConfig: ServerConfig = {
   REFRESH_TOKEN_SECRET: process.env.REFRESH_TOKEN_SECRET as string,
   REFRESH_TOKEN_EXPIRES_IN: process.env.REFRESH_TOKEN_EXPIRES_IN as string,
   HOTEL_SERVICE_URL: process.env.HOTEL_SERVICE_URL as string,
+  BOOKING_SERVICE_URL: process.env.BOOKING_SERVICE_URL as string,
 };

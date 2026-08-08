@@ -7,7 +7,6 @@ import {
 } from "./middlewares/error.middleware";
 import logger from "./config/logger.config";
 import { attachCorrelationIdMiddleware } from "./middlewares/correlation.middleware";
-import { addToEmailQueue } from "./producers/email.producer";
 const app = express();
 
 app.use(express.json());

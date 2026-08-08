@@ -14,6 +14,8 @@ type ServerConfig = {
   BOOKING_LOCK_TTL: number;
   REDIS_HOST: string;
   REDIS_PORT: number;
+  ACCESS_TOKEN_SECRET: string;
+  INTERNAL_API_KEY: string;
 };
 
 function loadEnv() {
@@ -36,4 +38,6 @@ export const serverConfig: ServerConfig = {
   connectionLimit: Number(process.env.connectionLimit) || 5,
   REDIS_HOST: process.env.REDIS_HOST as string,
   REDIS_PORT: Number(process.env.REDIS_PORT) || 6379,
+  ACCESS_TOKEN_SECRET: process.env.ACCESS_TOKEN_SECRET as string,
+  INTERNAL_API_KEY: process.env.INTERNAL_API_KEY as string,
 };
