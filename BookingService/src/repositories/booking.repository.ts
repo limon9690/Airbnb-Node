@@ -4,7 +4,9 @@ import { BadRequestError, NotFoundError } from "../utils/errors/app.error";
 import { prisma } from "../utils/lib/prisma";
 import { validate as isValidUUID } from "uuid";
 
-const createBooking = async (bookingData: CreateBookingDto) => {
+const createBooking = async (
+  bookingData: CreateBookingDto & { bookingAmount: number },
+) => {
   const data = {
     userId: bookingData.userId,
     hotelId: bookingData.hotelId,

@@ -18,5 +18,10 @@ router.post(
   auth([AppRole.USER, AppRole.OWNER, AppRole.ADMIN]),
   bookingController.confirmBooking,
 );
+router.post(
+  "/:bookingId/cancel",
+  auth([AppRole.USER, AppRole.OWNER, AppRole.ADMIN]),
+  bookingController.cancelBooking,
+);
 
 export const bookingRouter = router;

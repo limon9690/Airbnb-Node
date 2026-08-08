@@ -5,7 +5,7 @@ import { NotFoundError } from "../utils/errors/app.error";
 
 const createHotel = async (req: Request, res : Response, next: NextFunction) => {
     try {
-        const hotelData = req.body;
+        const hotelData = { ...req.body, ownerId: req.user!.id };
         const newHotel = await hotelService.createHotel(hotelData);
         
         res.status(StatusCodes.CREATED).json({
@@ -54,7 +54,10 @@ const updateHotel = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const hotelId = parseInt(req.params.id);
         const hotelData = req.body;
-        const updatedHotel = await hotelService.updateHotel(hotelId, hotelData);
+        const updatedHotel = await hotelService.updateHotel(hotelId, hotelData, {
+            id: req.user!.id,
+            role: req.user!.role,
+        });
 
         if (!updatedHotel) {
             throw new NotFoundError("Hotel not found");
@@ -73,7 +76,10 @@ const updateHotel = async (req: Request, res: Response, next: NextFunction) => {
 const deleteHotel = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const hotelId = parseInt(req.params.id);
-        const deletedHotel = await hotelService.deleteHotel(hotelId);
+        const deletedHotel = await hotelService.deleteHotel(hotelId, {
+            id: req.user!.id,
+            role: req.user!.role,
+        });
 
         if (!deletedHotel) {
             throw new NotFoundError("Hotel not found");

@@ -1,4 +1,4 @@
-import { createHotelDTO } from "../dto/hotel.dto";
+import { createHotelDTO, updateHotelDTO } from "../dto/hotel.dto";
 import {prisma} from "../utils/lib/prisma";
 
 const createHotel = async (hotelData: createHotelDTO) => {
@@ -13,7 +13,7 @@ const getHotelById = async (id: number) => {
     return await prisma.hotel.findUnique({ where: { id } });
 }
 
-const updateHotel = async (id: number, hotelData: createHotelDTO) => {
+const updateHotel = async (id: number, hotelData: updateHotelDTO) => {
     return await prisma.hotel.update({ where: { id }, data: hotelData });
 }
 

@@ -20,6 +20,7 @@ model Hotel {
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
   rating              Int?
+  ownerId             Int
   roomCategories      RoomCategory[]
   rooms               Room[]
 }

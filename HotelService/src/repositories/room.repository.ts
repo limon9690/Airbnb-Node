@@ -13,6 +13,18 @@ const findByRoomCategoryIdAndDate = async (
   });
 };
 
+const countByRoomCategoryIdAndDate = async (
+  roomCategoryId: number,
+  dateOfAvailability: Date,
+) => {
+  return await prisma.room.count({
+    where: {
+      roomCategoryId,
+      dateOfAvailability,
+    },
+  });
+};
+
 const bulkCreate = async (rooms: Prisma.RoomCreateManyInput[]) => {
   return await prisma.room.createMany({
     data: rooms,
@@ -98,6 +110,7 @@ const releaseRoomsByBookingId = async (bookingId: number) => {
 
 export const roomRepository = {
   findByRoomCategoryIdAndDate,
+  countByRoomCategoryIdAndDate,
   bulkCreate,
   findLatestDateByRoomCategoryId,
   findLatestDatesForAllCategories,

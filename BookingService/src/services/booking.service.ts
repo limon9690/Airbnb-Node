@@ -10,15 +10,17 @@ import { addToEmailQueue } from "../producers/email.producer";
 import { bookingRepository } from "../repositories/booking.repository";
 import {
   ConflictError,
+  ForbiddenError,
   InternalServerError,
   NotFoundError,
 } from "../utils/errors/app.error";
 import { generateIdempotencyKey } from "../utils/helpers/generateIdempotencyKey";
 import { prisma } from "../utils/lib/prisma";
+import { AppRole } from "../types/auth.type";
 
 type AvailableRoom = {
   id: number;
-  roomNumber: string;
+  price: number;
   roomCategoryId: number;
   hotelId: number;
 };
@@ -49,11 +51,18 @@ const createBooking = async (bookingData: CreateBookingDto) => {
     }
 
     // Only claim exactly as many room-nights as the stay needs.
-    const roomIdsToClaim = availableRooms
-      .slice(0, totalNights)
-      .map((room) => room.id);
+    const roomsToClaim = availableRooms.slice(0, totalNights);
+    const roomIdsToClaim = roomsToClaim.map((room) => room.id);
 
-    const booking = await bookingRepository.createBooking(bookingData);
+    const bookingAmount = roomsToClaim.reduce(
+      (sum, room) => sum + room.price,
+      0,
+    );
+
+    const booking = await bookingRepository.createBooking({
+      ...bookingData,
+      bookingAmount,
+    });
 
     // Claim is conditional (bookingId must still be null) so a concurrent
     // booking racing for the same rooms can't silently get overwritten.
@@ -88,6 +97,7 @@ const createBooking = async (bookingData: CreateBookingDto) => {
 
 const confirmBooking = async (
   idempotencyKey: string,
+  requester: { id: number; role: AppRole },
   recipient: { email: string; name: string },
 ) => {
   return await prisma.$transaction(async (tx) => {
@@ -102,6 +112,21 @@ const confirmBooking = async (
 
     if (idempotencyRecord.finalized) {
       throw new NotFoundError("Idempotency key has already been finalized");
+    }
+
+    const existingBooking = await tx.booking.findUnique({
+      where: { id: idempotencyRecord.bookingId },
+    });
+
+    if (!existingBooking) {
+      throw new NotFoundError("Booking not found");
+    }
+
+    if (
+      existingBooking.userId !== requester.id &&
+      requester.role !== AppRole.ADMIN
+    ) {
+      throw new ForbiddenError("You can only confirm your own bookings");
     }
 
     const booking = await bookingRepository.confirmBooking(
@@ -129,7 +154,33 @@ const confirmBooking = async (
   });
 };
 
+const cancelBooking = async (
+  bookingId: number,
+  requester: { id: number; role: AppRole },
+) => {
+  const booking = await bookingRepository.getBookingById(bookingId);
+
+  if (!booking) {
+    throw new NotFoundError("Booking not found");
+  }
+
+  if (booking.userId !== requester.id && requester.role !== AppRole.ADMIN) {
+    throw new ForbiddenError("You can only cancel your own bookings");
+  }
+
+  if (booking.status === "CANCELLED") {
+    throw new ConflictError("Booking is already cancelled");
+  }
+
+  // Release rooms before flipping the status, so a failure here never
+  // leaves rooms stuck claimed against a booking that already looks cancelled.
+  await releaseRoomsByBookingId(booking.id);
+
+  return await bookingRepository.cancelBooking(booking.id);
+};
+
 export const bookingService = {
   createBooking,
   confirmBooking,
+  cancelBooking,
 };

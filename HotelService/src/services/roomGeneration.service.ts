@@ -98,12 +98,14 @@ export async function processDateBatch(
   const normalizedEndDate = normalizeDate(endDate);
 
   while (currentDate <= normalizedEndDate) {
-    const existingRoom = await roomRepository.findByRoomCategoryIdAndDate(
+    const existingCount = await roomRepository.countByRoomCategoryIdAndDate(
       roomCategory.id,
       new Date(currentDate),
     );
 
-    if (!existingRoom) {
+    const roomsNeeded = roomCategory.roomCount - existingCount;
+
+    for (let i = 0; i < roomsNeeded; i++) {
       roomsToCreate.push({
         hotelId: roomCategory.hotelId,
         roomCategoryId: roomCategory.id,

@@ -21,7 +21,7 @@ router.get("/health", (req, res) => {
 
 router.post(
   "/",
-  auth([AppRole.OWNER, AppRole.ADMIN]),
+  auth([AppRole.OWNER]),
   validateRequestBody(createHotelSchema),
   hotelController.createHotel,
 );
