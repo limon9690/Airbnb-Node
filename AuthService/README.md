@@ -1,31 +1,44 @@
-## Steps to setup the starter template
+# AuthService
 
-1. Clone the project
+Handles accounts and sits in front of the other services as the API gateway — it's the only thing a client ever talks to directly.
 
-```
-git clone https://github.com/singhsanket143/Express-Typescript-Starter-Project.git <ProjectName>
-```
+## What it does
 
-2. Move in to the folder structure
+- Signup and signin, passwords hashed with bcrypt
+- Issues JWT access tokens and refresh tokens
+- Role-based access control (USER, OWNER, ADMIN)
+- Rate limits signup/signin
+- Proxies everything under `/api/v1/hotels` and `/api/v1/bookings` to HotelService and BookingService
 
-```
-cd <ProjectName>
-```
+## Endpoints
 
-3. Install npm dependencies
+| Method | Path                       | Auth                 | Description                                                      |
+| ------ | -------------------------- | -------------------- | ---------------------------------------------------------------- |
+| POST   | /api/v1/auth/signup        | none (rate-limited)  | create an account                                                |
+| POST   | /api/v1/auth/signin        | none (rate-limited)  | sign in, returns an access token and sets a refresh token cookie |
+| POST   | /api/v1/auth/logout        | USER / OWNER / ADMIN | clears the refresh token                                         |
+| POST   | /api/v1/auth/refresh-token | USER / OWNER / ADMIN | issues a new access token                                        |
+| GET    | /api/v1/auth/me            | USER / OWNER / ADMIN | current user's profile                                           |
+| DELETE | /api/v1/auth/me            | USER / OWNER / ADMIN | delete own account                                               |
+| GET    | /api/v1/auth/users         | ADMIN                | list all users                                                   |
 
-```
-npm i
-```
+Everything under `/api/v1/hotels` and `/api/v1/bookings` gets proxied straight through to HotelService and BookingService. Auth for those routes is enforced on the other end, not here.
 
-4. Create a new .env file in the root directory and add the `PORT` env variable
+## Environment variables
 
-```
-echo PORT=3000 >> .env
-```
+See `.env.example`. `ACCESS_TOKEN_SECRET` has to be identical here, in HotelService, and in BookingService — all three verify the same tokens.
 
-5. Start the express server
+## Running locally
 
-```
+```bash
+cp .env.example .env
+npm install
+npx prisma migrate dev
 npm run dev
 ```
+
+Runs on port 3001 by default.
+
+## Depends on
+
+HotelService and BookingService need to be reachable for the proxy routes to work — see `HOTEL_SERVICE_URL` and `BOOKING_SERVICE_URL` in `.env`.
