@@ -59,5 +59,10 @@ router.get(
   "/:hotelId/room-categories",
   roomCategoryController.getAllRoomCategoriesByHotelId,
 );
+router.delete(
+  "/:hotelId/room-categories/:id",
+  auth([AppRole.OWNER, AppRole.ADMIN]),
+  roomCategoryController.deleteRoomCategory,
+);
 
 export const HotelRouter = router;

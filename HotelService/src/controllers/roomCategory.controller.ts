@@ -46,7 +46,32 @@ const getAllRoomCategoriesByHotelId = async (
   }
 };
 
+const deleteRoomCategory = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const hotelId = Number(req.params.hotelId);
+    const id = Number(req.params.id);
+
+    await roomCategoryService.deleteRoomCategory(hotelId, id, {
+      id: req.user!.id,
+      role: req.user!.role,
+    });
+
+    res.status(StatusCodes.OK).json({
+      message: "Room category deleted successfully",
+      data: null,
+      success: true,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const roomCategoryController = {
   createRoomCategory,
   getAllRoomCategoriesByHotelId,
+  deleteRoomCategory,
 };

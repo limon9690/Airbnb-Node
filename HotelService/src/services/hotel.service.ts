@@ -1,7 +1,11 @@
 import { createHotelDTO, updateHotelDTO } from "../dto/hotel.dto";
 import { hotelRepository } from "../repositories/hotel.repository";
 import { AppRole } from "../types/auth.type";
-import { ForbiddenError, NotFoundError } from "../utils/errors/app.error";
+import {
+    ConflictError,
+    ForbiddenError,
+    NotFoundError,
+} from "../utils/errors/app.error";
 
 const createHotel = async (hotelData: createHotelDTO) => {
     return await hotelRepository.createHotel(hotelData);
@@ -46,7 +50,17 @@ const deleteHotel = async (
     requester: { id: number; role: AppRole },
 ) => {
     await assertOwnership(id, requester);
-    return await hotelRepository.deleteHotel(id);
+
+    try {
+        return await hotelRepository.deleteHotel(id);
+    } catch (error: any) {
+        if (error?.code === "P2003") {
+            throw new ConflictError(
+                "Cannot delete a hotel that still has room categories or rooms. Delete those first.",
+            );
+        }
+        throw error;
+    }
 }
 
 export const hotelService = {
