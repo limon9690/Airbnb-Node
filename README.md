@@ -2,6 +2,12 @@
 
 A hotel booking backend split into four services (auth, hotels, bookings, notifications), each with its own database. It covers the whole flow end to end: sign up, browse hotels, book a room, get a confirmation email. The booking part is built to survive concurrent requests — no two people can grab the same room for the same night.
 
+## 🎥 Demo (3 min)
+
+▶️ **[Watch the 23-minute demo](https://youtu.be/FSv9VboV8U4)**
+
+A 23-minute walkthrough: two concurrent requests race for the last room — one succeeds, one is cleanly rejected (no double-booking) — plus idempotent confirmation and the async email pipeline, end to end.
+
 ## Architecture
 
 ```mermaid
