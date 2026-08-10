@@ -4,6 +4,8 @@ A hotel booking backend split into four services (auth, hotels, bookings, notifi
 
 ## 🎥 Demo (3 min)
 
+[![Watch the demo — one request wins, one is rejected, no double-booking](docs/demo-thumbnail.png)](https://youtu.be/FSv9VboV8U4)
+
 ▶️ **[Watch the 3-minute demo](https://youtu.be/FSv9VboV8U4)**
 
 A 3-minute walkthrough: two concurrent requests race for the last room — one succeeds, one is cleanly rejected (no double-booking) — plus idempotent confirmation and the async email pipeline, end to end.
