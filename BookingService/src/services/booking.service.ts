@@ -17,6 +17,7 @@ import {
 import { generateIdempotencyKey } from "../utils/helpers/generateIdempotencyKey";
 import { prisma } from "../utils/lib/prisma";
 import { AppRole } from "../types/auth.type";
+import logger from "../config/logger.config";
 
 type AvailableRoom = {
   id: number;
@@ -27,9 +28,13 @@ type AvailableRoom = {
 
 const createBooking = async (bookingData: CreateBookingDto) => {
   const bookingResource = `booking:${bookingData.hotelId}`;
+  let lock;
 
   try {
-    await redlock.acquire([bookingResource], serverConfig.BOOKING_LOCK_TTL);
+    lock = await redlock.acquire(
+      [bookingResource],
+      serverConfig.BOOKING_LOCK_TTL,
+    );
 
     const availableRoomsResponse = await getAvailableRooms(
       bookingData.roomCategoryId,
@@ -92,6 +97,17 @@ const createBooking = async (bookingData: CreateBookingDto) => {
       throw error;
     }
     throw new InternalServerError(error.message);
+  } finally {
+    // Release explicitly instead of just letting the TTL expire - otherwise
+    // every other booking attempt for this hotel is blocked until the TTL
+    // runs out, not just for the duration of this request.
+    if (lock) {
+      try {
+        await lock.release();
+      } catch (releaseError) {
+        logger.error("Failed to release booking lock", { releaseError });
+      }
+    }
   }
 };
 
