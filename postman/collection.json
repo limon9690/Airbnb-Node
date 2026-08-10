@@ -1,0 +1,693 @@
+{
+  "info": {
+    "name": "Hotel Booking Microservices",
+    "description": "End-to-end collection for the Hotel Booking Microservices project.\n\nRun order matters: Auth -> Hotels -> Rooms & Scheduler -> Bookings. Each request that produces an ID or token saves it to a collection variable automatically (via each request's post-response script), so later requests don't need any manual copy-pasting.\n\nImportant routing note: the API gateway (AuthService, {{gatewayUrl}}) only proxies /api/v1/hotels and /api/v1/bookings today. The room-availability search and scheduler admin routes are not proxied yet, so those requests hit HotelService directly at {{hotelServiceUrl}} instead of going through the gateway. That's not an oversight in this collection - it reflects the current state of the system.\n\nTiming note: room generation runs asynchronously on a queue. After running 'Generate Rooms', wait a couple of seconds before running 'Get Available Rooms' or 'Create Booking', or the rooms may not exist yet.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "ownerAccessToken", "value": "" },
+    { "key": "guestAccessToken", "value": "" },
+    { "key": "adminAccessToken", "value": "" },
+    { "key": "hotelId", "value": "" },
+    { "key": "roomCategoryId", "value": "" },
+    { "key": "bookingId", "value": "" },
+    { "key": "idempotencyKey", "value": "" },
+    { "key": "genStartDate", "value": "" },
+    { "key": "genEndDate", "value": "" },
+    { "key": "bookingCheckIn", "value": "" },
+    { "key": "bookingCheckOut", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "description": "Signup/signin for three test users (owner, guest, admin) used by the rest of the collection.",
+      "item": [
+        {
+          "name": "Sign Up - Owner",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "auth": { "type": "noauth" },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Alice Owner\",\n  \"email\": \"alice.owner@example.com\",\n  \"password\": \"password123\",\n  \"role\": \"OWNER\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{gatewayUrl}}/api/v1/auth/signup",
+              "host": ["{{gatewayUrl}}"],
+              "path": ["api", "v1", "auth", "signup"]
+            }
+          }
+        },
+        {
+          "name": "Sign Up - Guest",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "auth": { "type": "noauth" },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Gary Guest\",\n  \"email\": \"gary.guest@example.com\",\n  \"password\": \"password123\",\n  \"role\": \"USER\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{gatewayUrl}}/api/v1/auth/signup",
+              "host": ["{{gatewayUrl}}"],
+              "path": ["api", "v1", "auth", "signup"]
+            }
+          }
+        },
+        {
+          "name": "Sign Up - Admin",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "auth": { "type": "noauth" },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Amy Admin\",\n  \"email\": \"amy.admin@example.com\",\n  \"password\": \"password123\",\n  \"role\": \"ADMIN\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{gatewayUrl}}/api/v1/auth/signup",
+              "host": ["{{gatewayUrl}}"],
+              "path": ["api", "v1", "auth", "signup"]
+            }
+          }
+        },
+        {
+          "name": "Sign In - Owner",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json && json.data && json.data.accessToken) {",
+                  "    pm.collectionVariables.set('ownerAccessToken', json.data.accessToken);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "auth": { "type": "noauth" },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"alice.owner@example.com\",\n  \"password\": \"password123\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{gatewayUrl}}/api/v1/auth/signin",
+              "host": ["{{gatewayUrl}}"],
+              "path": ["api", "v1", "auth", "signin"]
+            }
+          }
+        },
+        {
+          "name": "Sign In - Guest",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json && json.data && json.data.accessToken) {",
+                  "    pm.collectionVariables.set('guestAccessToken', json.data.accessToken);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "auth": { "type": "noauth" },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"gary.guest@example.com\",\n  \"password\": \"password123\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{gatewayUrl}}/api/v1/auth/signin",
+              "host": ["{{gatewayUrl}}"],
+              "path": ["api", "v1", "auth", "signin"]
+            }
+          }
+        },
+        {
+          "name": "Get My Profile",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{guestAccessToken}}", "type": "string" }]
+            },
+            "url": {
+              "raw": "{{gatewayUrl}}/api/v1/auth/me",
+              "host": ["{{gatewayUrl}}"],
+              "path": ["api", "v1", "auth", "me"]
+            }
+          }
+        },
+        {
+          "name": "Refresh Token",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{guestAccessToken}}", "type": "string" }]
+            },
+            "url": {
+              "raw": "{{gatewayUrl}}/api/v1/auth/refresh-token",
+              "host": ["{{gatewayUrl}}"],
+              "path": ["api", "v1", "auth", "refresh-token"]
+            },
+            "description": "Must run right after 'Sign In - Guest', before any other user signs in. All three test users share one browser-like cookie jar/domain, so each signin overwrites the same refreshToken cookie slot - if Owner or Admin signs in after Guest but before this request, the cookie in the jar won't match what's stored in the DB for the guest user anymore, and this will fail with 'Invalid refresh token'."
+          }
+        },
+        {
+          "name": "Sign In - Admin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json && json.data && json.data.accessToken) {",
+                  "    pm.collectionVariables.set('adminAccessToken', json.data.accessToken);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "auth": { "type": "noauth" },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"amy.admin@example.com\",\n  \"password\": \"password123\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{gatewayUrl}}/api/v1/auth/signin",
+              "host": ["{{gatewayUrl}}"],
+              "path": ["api", "v1", "auth", "signin"]
+            }
+          }
+        },
+        {
+          "name": "Get All Users (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{adminAccessToken}}", "type": "string" }]
+            },
+            "url": {
+              "raw": "{{gatewayUrl}}/api/v1/auth/users",
+              "host": ["{{gatewayUrl}}"],
+              "path": ["api", "v1", "auth", "users"]
+            }
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{guestAccessToken}}", "type": "string" }]
+            },
+            "url": {
+              "raw": "{{gatewayUrl}}/api/v1/auth/logout",
+              "host": ["{{gatewayUrl}}"],
+              "path": ["api", "v1", "auth", "logout"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Hotels",
+      "description": "Hotel and room-category management. Runs as the Owner user by default - creation/update/delete requests need an OWNER (or ADMIN, for update/delete) token; the two GET routes are public.",
+      "auth": {
+        "type": "bearer",
+        "bearer": [{ "key": "token", "value": "{{ownerAccessToken}}", "type": "string" }]
+      },
+      "item": [
+        {
+          "name": "Create Hotel",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json && json.data && json.data.id) {",
+                  "    pm.collectionVariables.set('hotelId', json.data.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Venice City Hotel {{$timestamp}}\",\n  \"address\": \"123 Canal St\",\n  \"location\": \"Venice, Italy\",\n  \"rating\": 4\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{gatewayUrl}}/api/v1/hotels",
+              "host": ["{{gatewayUrl}}"],
+              "path": ["api", "v1", "hotels"]
+            }
+          }
+        },
+        {
+          "name": "List Hotels",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": { "type": "noauth" },
+            "url": {
+              "raw": "{{gatewayUrl}}/api/v1/hotels",
+              "host": ["{{gatewayUrl}}"],
+              "path": ["api", "v1", "hotels"]
+            }
+          }
+        },
+        {
+          "name": "Get Hotel By Id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": { "type": "noauth" },
+            "url": {
+              "raw": "{{gatewayUrl}}/api/v1/hotels/{{hotelId}}",
+              "host": ["{{gatewayUrl}}"],
+              "path": ["api", "v1", "hotels", "{{hotelId}}"]
+            }
+          }
+        },
+        {
+          "name": "Update Hotel",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rating\": 5\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{gatewayUrl}}/api/v1/hotels/{{hotelId}}",
+              "host": ["{{gatewayUrl}}"],
+              "path": ["api", "v1", "hotels", "{{hotelId}}"]
+            }
+          }
+        },
+        {
+          "name": "Create Room Category",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json && json.data && json.data.id) {",
+                  "    pm.collectionVariables.set('roomCategoryId', json.data.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"price\": 150,\n  \"roomType\": \"DOUBLE\",\n  \"roomCount\": 5\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{gatewayUrl}}/api/v1/hotels/{{hotelId}}/room-categories",
+              "host": ["{{gatewayUrl}}"],
+              "path": ["api", "v1", "hotels", "{{hotelId}}", "room-categories"]
+            }
+          }
+        },
+        {
+          "name": "List Room Categories",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": { "type": "noauth" },
+            "url": {
+              "raw": "{{gatewayUrl}}/api/v1/hotels/{{hotelId}}/room-categories",
+              "host": ["{{gatewayUrl}}"],
+              "path": ["api", "v1", "hotels", "{{hotelId}}", "room-categories"]
+            }
+          }
+        },
+        {
+          "name": "Generate Rooms",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Computed once here and reused by later requests, so the",
+                  "// generated availability window and the booking dates never drift apart.",
+                  "const start = new Date();",
+                  "start.setUTCDate(start.getUTCDate() + 30);",
+                  "start.setUTCHours(0, 0, 0, 0);",
+                  "",
+                  "const end = new Date(start);",
+                  "end.setUTCDate(end.getUTCDate() + 5);",
+                  "",
+                  "const checkIn = new Date(start);",
+                  "checkIn.setUTCDate(checkIn.getUTCDate() + 1);",
+                  "",
+                  "const checkOut = new Date(checkIn);",
+                  "checkOut.setUTCDate(checkOut.getUTCDate() + 2);",
+                  "",
+                  "pm.collectionVariables.set('genStartDate', start.toISOString());",
+                  "pm.collectionVariables.set('genEndDate', end.toISOString());",
+                  "pm.collectionVariables.set('bookingCheckIn', checkIn.toISOString());",
+                  "pm.collectionVariables.set('bookingCheckOut', checkOut.toISOString());"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"roomCategoryId\": {{roomCategoryId}},\n  \"startDate\": \"{{genStartDate}}\",\n  \"endDate\": \"{{genEndDate}}\",\n  \"scheduleType\": \"immediate\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{gatewayUrl}}/api/v1/hotels/generate-rooms",
+              "host": ["{{gatewayUrl}}"],
+              "path": ["api", "v1", "hotels", "generate-rooms"]
+            },
+            "description": "Runs async on a queue. Wait a couple of seconds before the next request."
+          }
+        },
+        {
+          "name": "Delete Room Category",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{gatewayUrl}}/api/v1/hotels/{{hotelId}}/room-categories/{{roomCategoryId}}",
+              "host": ["{{gatewayUrl}}"],
+              "path": ["api", "v1", "hotels", "{{hotelId}}", "room-categories", "{{roomCategoryId}}"]
+            },
+            "description": "Not run as part of the main flow by default. Deletes the category's unbooked rooms and the category itself - blocked with a 409 if any of its rooms are still tied to an active booking. Run this before 'Delete Hotel' below, since a hotel can't be deleted while it still has room categories."
+          }
+        },
+        {
+          "name": "Delete Hotel",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{gatewayUrl}}/api/v1/hotels/{{hotelId}}",
+              "host": ["{{gatewayUrl}}"],
+              "path": ["api", "v1", "hotels", "{{hotelId}}"]
+            },
+            "description": "Not run as part of the main flow by default - only use this once you're done exercising the booking flow below. Blocked with a 409 if the hotel still has room categories or rooms - run 'Delete Room Category' above first."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Rooms & Scheduler (direct to HotelService)",
+      "description": "These routes are not proxied through the gateway yet, so they go straight to HotelService at {{hotelServiceUrl}} instead of {{gatewayUrl}}.",
+      "item": [
+        {
+          "name": "Get Available Rooms",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": { "type": "noauth" },
+            "url": {
+              "raw": "{{hotelServiceUrl}}/api/v1/rooms/available-rooms?roomCategoryId={{roomCategoryId}}&startDate={{bookingCheckIn}}&endDate={{bookingCheckOut}}",
+              "host": ["{{hotelServiceUrl}}"],
+              "path": ["api", "v1", "rooms", "available-rooms"],
+              "query": [
+                { "key": "roomCategoryId", "value": "{{roomCategoryId}}" },
+                { "key": "startDate", "value": "{{bookingCheckIn}}" },
+                { "key": "endDate", "value": "{{bookingCheckOut}}" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Scheduler: Status",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{adminAccessToken}}", "type": "string" }]
+            },
+            "url": {
+              "raw": "{{hotelServiceUrl}}/api/v1/scheduler/status",
+              "host": ["{{hotelServiceUrl}}"],
+              "path": ["api", "v1", "scheduler", "status"]
+            }
+          }
+        },
+        {
+          "name": "Scheduler: Start",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{adminAccessToken}}", "type": "string" }]
+            },
+            "url": {
+              "raw": "{{hotelServiceUrl}}/api/v1/scheduler/start",
+              "host": ["{{hotelServiceUrl}}"],
+              "path": ["api", "v1", "scheduler", "start"]
+            }
+          }
+        },
+        {
+          "name": "Scheduler: Stop",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{adminAccessToken}}", "type": "string" }]
+            },
+            "url": {
+              "raw": "{{hotelServiceUrl}}/api/v1/scheduler/stop",
+              "host": ["{{hotelServiceUrl}}"],
+              "path": ["api", "v1", "scheduler", "stop"]
+            }
+          }
+        },
+        {
+          "name": "Scheduler: Extend Now",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{adminAccessToken}}", "type": "string" }]
+            },
+            "url": {
+              "raw": "{{hotelServiceUrl}}/api/v1/scheduler/extend",
+              "host": ["{{hotelServiceUrl}}"],
+              "path": ["api", "v1", "scheduler", "extend"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Bookings",
+      "description": "Runs as the Guest user - this is the account that ends up owning the booking.",
+      "auth": {
+        "type": "bearer",
+        "bearer": [{ "key": "token", "value": "{{guestAccessToken}}", "type": "string" }]
+      },
+      "item": [
+        {
+          "name": "Create Booking",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json && json.bookingId) {",
+                  "    pm.collectionVariables.set('bookingId', json.bookingId);",
+                  "}",
+                  "if (json && json.idempotencyKey) {",
+                  "    pm.collectionVariables.set('idempotencyKey', json.idempotencyKey);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"hotelId\": {{hotelId}},\n  \"roomCategoryId\": {{roomCategoryId}},\n  \"totalGuests\": 2,\n  \"checkInDate\": \"{{bookingCheckIn}}\",\n  \"checkOutDate\": \"{{bookingCheckOut}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{gatewayUrl}}/api/v1/bookings",
+              "host": ["{{gatewayUrl}}"],
+              "path": ["api", "v1", "bookings"]
+            },
+            "description": "bookingAmount is never sent here - the server computes it from the actual rooms it claims. Sending one wouldn't do anything."
+          }
+        },
+        {
+          "name": "Confirm Booking",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{gatewayUrl}}/api/v1/bookings/{{idempotencyKey}}",
+              "host": ["{{gatewayUrl}}"],
+              "path": ["api", "v1", "bookings", "{{idempotencyKey}}"]
+            }
+          }
+        },
+        {
+          "name": "Cancel Booking",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{gatewayUrl}}/api/v1/bookings/{{bookingId}}/cancel",
+              "host": ["{{gatewayUrl}}"],
+              "path": ["api", "v1", "bookings", "{{bookingId}}", "cancel"]
+            },
+            "description": "Not run as part of the main flow by default - this cancels the booking created above. Run it explicitly if you want to see the cancellation path."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Internal - Debug",
+      "description": "Service-to-service endpoints that BookingService calls on HotelService directly. Not meant for a real client - included here for debugging only. Needs INTERNAL_API_KEY from HotelService's .env in the internalApiKey environment variable.",
+      "item": [
+        {
+          "name": "Update Booking Id To Rooms",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "x-internal-api-key", "value": "{{internalApiKey}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"bookingId\": {{bookingId}},\n  \"roomIds\": []\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{hotelServiceUrl}}/api/v1/rooms/update-booking-id",
+              "host": ["{{hotelServiceUrl}}"],
+              "path": ["api", "v1", "rooms", "update-booking-id"]
+            }
+          }
+        },
+        {
+          "name": "Release Booking Rooms",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "x-internal-api-key", "value": "{{internalApiKey}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"bookingId\": {{bookingId}}\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{hotelServiceUrl}}/api/v1/rooms/release-booking-rooms",
+              "host": ["{{hotelServiceUrl}}"],
+              "path": ["api", "v1", "rooms", "release-booking-rooms"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Health Checks",
+      "description": "Direct-to-service health checks. AuthService has no dedicated health route of its own.",
+      "item": [
+        {
+          "name": "HotelService Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": { "type": "noauth" },
+            "url": {
+              "raw": "{{hotelServiceUrl}}/api/v1/hotels/health",
+              "host": ["{{hotelServiceUrl}}"],
+              "path": ["api", "v1", "hotels", "health"]
+            }
+          }
+        },
+        {
+          "name": "BookingService Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": { "type": "noauth" },
+            "url": {
+              "raw": "{{bookingServiceUrl}}/api/v1/health",
+              "host": ["{{bookingServiceUrl}}"],
+              "path": ["api", "v1", "health"]
+            }
+          }
+        },
+        {
+          "name": "NotificationService Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": { "type": "noauth" },
+            "url": {
+              "raw": "{{notificationServiceUrl}}/api/v1/ping/health",
+              "host": ["{{notificationServiceUrl}}"],
+              "path": ["api", "v1", "ping", "health"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

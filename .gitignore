@@ -12,5 +12,5 @@ node_modules/
 # logs
 *.log
 .env
-postman/
 scripts/
+notes.txt
